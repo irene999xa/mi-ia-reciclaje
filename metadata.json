@@ -1,0 +1,1 @@
+{"tfjsVersion":"1.7.4","tmVersion":"2.4.18","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2026-11-02T12:34:03.451Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["Plásticos","Vidrio","Papel y cartón","Ropa","Aceites","Restos","Orgánica"],"imageSize":224}
