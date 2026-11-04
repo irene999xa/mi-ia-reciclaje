@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escáner de Reciclaje en Tiempo Real</title>
+    <!-- Cargamos las librerías oficiales de TensorFlow y Teachable Machine -->
+    <script src="https://jsdelivr.net"></script>
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body style="margin:0; padding:0; text-align:center; font-family:sans-serif; background:#f4f4f4;">
+
+    <h2>Escáner de Residuos</h2>
+    
+    <!-- Aquí se mostrará la cámara del móvil -->
+    <div id="webcam-container" style="margin: 10px auto; max-width: 100%;"></div>
+    
+    <!-- Aquí saldrá el residuo detectado -->
+    <div id="label-container" style="font-size:24px; font-weight:bold; margin-top:20px; color:#2e7d32;">
+        Cargando Inteligencia Artificial...
+    </div>
+
+    <script type="text/javascript">
+        // Indicamos que el modelo está en la misma carpeta del servidor
+        const URL = "./"; 
+
+        let model, webcam, labelContainer, maxPredictions;
+
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+            // Cargamos la IA
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            // Configuración de la cámara móvil
+            const flip = true; 
+            webcam = new tmImage.Webcam(300, 300, flip);
+            await webcam.setup({ facingMode: "environment" }); // "environment" usa la cámara trasera del móvil
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+
+            // Colocamos el recuadro de la cámara en la pantalla
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            labelContainer = document.getElementById("label-container");
+            labelContainer.innerHTML = "¡Escáner Listo!";
+        }
+
+        async function loop() {
+            webcam.update(); 
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        async function predict() {
+            const prediction = await model.predict(webcam.canvas);
+            
+            // Buscamos cuál clase (plástico, papel, etc.) tiene el porcentaje más alto
+            let mayorPorcentaje = 0;
+            let resultadoFinal = "";
+
+            for (let i = 0; i < maxPredictions; i++) {
+                if(prediction[i].probability > mayorPorcentaje) {
+                    mayorPorcentaje = prediction[i].probability;
+                    resultadoFinal = prediction[i].className;
+                }
+            }
+            
+            // Si la IA está segura a más del 70%, muestra el residuo detectado
+            if (mayorPorcentaje > 0.70) {
+                labelContainer.innerHTML = "Detectado: " + resultadoFinal + " (" + Math.round(mayorPorcentaje * 100) + "%)";
+            } else {
+                labelContainer.innerHTML = "Apunte a un objeto...";
+            }
+        }
+
+        // Inicia el proceso al cargar la web
+        init();
+    </script>
+</body>
+</html>
